@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+#
+# scripts/pat-init
+#
+"""
+pat-init executable script of the pat-project
+
+Initializes a new data repository.
+"""
+
+import sys
+import os
+from argparse import ArgumentParser
+
+DESCRIPTION = '''Creates a new dat repository in the folder specified or the
+current folder. The new repository will be in the folder "data.dat".'''
+
+
+def parse_args(argv):
+    parser = ArgumentParser('pat-init', description=DESCRIPTION)
+    parser.add_argument('path',
+                        nargs='?',
+                        help='pathname of the variable',
+                        default=os.getcwd())
+    parser.add_argument('--no-prompt',
+                        help='Init without prompting, using defaults',
+                        action='store_true',
+                        dest='no_prompt')
+    return parser.parse_args(argv)
+
+
+def main(argv):
+    args = parse_args(argv)
+    if args.no_prompt:
+        print("NOT PROMPTING")
+    print("path:", args.path)
+    return os.EX_OK
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
