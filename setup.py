@@ -9,6 +9,7 @@ from glob import glob
 from setuptools import setup, find_packages
 
 REQUIRES = [
+    'python3-protobuf',
 ]
 
 TESTS_REQUIRE = [
