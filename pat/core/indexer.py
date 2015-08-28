@@ -126,3 +126,11 @@ class Indexer:
         if not result:
             raise Exception("Could not expand the hash")
         return self.get(result)
+
+    def start(self):
+        layer = self.meta.get('layer')
+        if layer:
+            self.mainlayer = layer
+
+        #wtf is loop?
+        self.loop(false, self.loop(true))
