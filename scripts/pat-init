@@ -10,7 +10,11 @@ Initializes a new data repository.
 
 import sys
 import os
+import logging
+import json
 from argparse import ArgumentParser
+
+from pat import Pat
 
 DESCRIPTION = '''Creates a new dat repository in the folder specified or the
 current folder. The new repository will be in the folder "data.dat".'''
@@ -24,16 +28,80 @@ def parse_args(argv):
                         default=os.getcwd())
     parser.add_argument('--no-prompt',
                         help='Init without prompting, using defaults',
-                        action='store_true',
-                        dest='no_prompt')
+                        action='store_false',
+                        dest='prompt')
+    parser.add_argument('--debug',
+                        help='Run with debugging output',
+                        action='store_true')
+    parser.add_argument('--no-write-config',
+                        help='Do not write the configuration file',
+                        action='store_false',
+                        dest='write_config')
+    parser.add_argument('--json',
+                        help='Outputs result in JSON format',
+                        action='store_true')
     return parser.parse_args(argv)
 
 
+def init(args):
+    log = logging.Logger("output")
+    log.setLevel('DEBUG')
+
+    log.debug('init %s' % (args.path))
+
+    basepath = os.path.basename(os.path.abspath(args.path))
+
+    try:
+        dat = Pat(args.path)
+    except Exception as error:
+        print(error)
+        log.debug('db read error', error)
+        res = {"message": "Re-initialized the dat at %s" % (args.path),
+               "exists": True}
+    else:
+        res = {"message": "Initialized a new dat at %s" % (args.path),
+               "created": True}
+
+    if args.write_config:
+        path = args.name if ('name' in args) else basepath
+        desc = args.description if ('description' in args) else None
+        publisher = args.publisher if ('publisher' in args) else None
+
+        if args.prompt:
+            name = input("Name [%s]: " % (path)).strip() or path
+            desc = input("Description [%s]: " % (desc)).strip() or desc
+            publisher = input("Publisher [%s]: " % (publisher)) or publisher
+
+        with open('package.json', 'w') as fp:
+            json.dump(fp=fp,
+                      ensure_ascii=False,
+                      obj={"name": name,
+                           "description": desc,
+                           "publisher": publisher})
+
+    if args.json:
+        print(json.dumps(res))
+    else:
+        print(res['message'])
+    return 0, 0
+
+
+
+def read_package(db):
+    rfile = db.create_file_read_stream('package.json', dataset='files')
+    rfile.pipe(concat)
+
 def main(argv):
     args = parse_args(argv)
-    if args.no_prompt:
+    if not args.prompt:
         print("NOT PROMPTING")
-    print("path:", args.path)
+
+    try:
+        results, db = init(args)
+    except Exception as error:
+        print(error, file=sys.stderr)
+        return 1
+
     return os.EX_OK
 
 if __name__ == "__main__":

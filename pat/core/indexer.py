@@ -11,7 +11,10 @@ class Indexer:
     I have no idea what this does!
     """
 
-    sockpath_default_platform =
+    sockpath_default_platform = {
+        'Windows': r'\\.\pipe\dat\\',
+        'Linux': '.',
+    }
 
     db = None
     db_path = ''
@@ -33,16 +36,10 @@ class Indexer:
 
         if db is not None:
             # ready(db, create_log(db), true)
+            pass
         elif multiprocess is None and path is None or backend is not None:
             db = levelup(dbpath, {'db': backend})
             # ready(db, create_log(db), true)
-
-        if system() == 'Windows':
-            path =
-{
-    'Windows': r'\\.\pipe\dat\',
-    'Linux': path.join
-}
 
         self.multiprocess = multiprocess({
             'sockpath': self.sockpath_default_platform[system()]
@@ -54,7 +51,7 @@ class Indexer:
 
         log = meta.get('log')
 
-        if log && log.split(':')[0:-1].join(':'), path:
+        if log and log.split(':')[0:-1].join(':'):
             return on_log()
 
         log = path + ":" + cuid()
@@ -71,11 +68,11 @@ class Indexer:
 
     def add(self, links, value):
 
-        node = self.log.add(links, messages.Commit.encode(value)
-        node, layer = self._flush_node(node)
-        if self.checkout or self.checkout in node.links:
+        node = self.log.add(links, messages.Commit.encode(value))
+        (node, layer) = self._flush_node(node)
+        if self.checkout and (self.checkout in node.links):
             self.meta.batch([{'type': 'put',
-                              'key': 'layer'
+                              'key': 'layer',
                               'value': layer},
                              {'type': 'del',
                               'key': 'checkout'}])
@@ -102,7 +99,7 @@ class Indexer:
         if head:
             self.meta.put('checkout', head)
         else:
-            self.meta.del('checkout')
+            self.meta.delete('checkout')
 
         self.checkout = head or None
 
@@ -133,4 +130,4 @@ class Indexer:
             self.mainlayer = layer
 
         #wtf is loop?
-        self.loop(false, self.loop(true))
+        self.loop(False, self.loop(True))
