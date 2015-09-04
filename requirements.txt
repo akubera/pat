@@ -1,1 +1,2 @@
 python3-protobuf==2.5.0
+leveldb==0.193
