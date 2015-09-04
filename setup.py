@@ -4,9 +4,14 @@
 """
 """
 
-import pat
 from glob import glob
-from setuptools import setup, find_packages
+from imp import load_source
+from setuptools import setup
+
+PACKAGES = [
+    'pat',
+    'pat.core',
+]
 
 REQUIRES = [
     'python3-protobuf',
@@ -25,13 +30,16 @@ CLASSIFIERS = [
     "Natural Language :: English",
 ]
 
+# load metadata from __meta__ file
+metadata = load_source("metadata", "pat/__meta__.py")
 
 setup(
     name="pat",
-    version=pat.__version__,
-    author=pat.__author__,
-    author_email=pat.__author_email__,
-    license=pat.__licence__,
+    packages=PACKAGES,
+    version=metadata.version,
+    author=metadata.author,
+    author_email=metadata.author_email,
+    license=metadata.license,
     install_requires=REQUIRES,
     description=__doc__.strip(),
     tests_require=TESTS_REQUIRE,

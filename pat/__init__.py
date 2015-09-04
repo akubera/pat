@@ -7,12 +7,14 @@
 Pat module file.
 """
 
+from .__meta__ import (
+    version as __version__,
+    date as __date__,
+    author as __author__,
+    author_email as __contact__,
+    license as __license__
+)
 
-__version__ = '0.0.0'
-__date__ = 'Aug 17, 2015'
-__author__ = 'Andrew Kubera'
-__author_email__ = 'andrewkubera@gmail.com'
-__license__ = '???'
 
 from . import core
 from .pat import Pat
