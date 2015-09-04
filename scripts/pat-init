@@ -24,7 +24,7 @@ def parse_args(argv):
     parser = ArgumentParser('pat-init', description=DESCRIPTION)
     parser.add_argument('path',
                         nargs='?',
-                        help='pathname of the variable',
+                        help='path of the database',
                         default=os.getcwd())
     parser.add_argument('--no-prompt',
                         help='Init without prompting, using defaults',

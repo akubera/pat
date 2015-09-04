@@ -43,7 +43,7 @@ class Pat:
         self._lock = asyncio.Lock()
         self._index = None
 
-        path = os.path.absdir(path)
+        path = os.path.abspath(path)
 
         should_create = opts.get('create_if_missing', False)
 

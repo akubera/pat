@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+#
+# pat-log
+#
+
+import os
+import sys
+from argparse import ArgumentParser
+
+from logging import (
+    debug,
+    warning,
+    error,
+)
+from pat import Pat
+
+
+DESCRIPTION = '''View a log of recent changes.'''
+
+
+def parse_args(argv):
+    parser = ArgumentParser('pat-log', description=DESCRIPTION)
+    parser.add_argument('path',
+                        nargs='?',
+                        help='path of the database',
+                        default=os.getcwd())
+    return parser.parse_args(argv)
+
+def format(obj, enc):
+
+    data = {
+        'version': obj.version,
+        'puts': (obj.puts if 'puts' in obj else 0),
+        'deletes': (obj.deletes if 'deletes' in obj else 0),
+        'date': (obj.deletes if 'deletes' in obj else 0),
+    }
+
+    message = ("Version: {version} [+{puts}, -{deletes}]\n"
+               "Date: {date}").format(**data)
+
+    if obj.message:
+        message = '%s\n\n   %s' % (message, obj.message)
+    return message + '\n\n'
+
+
+def main(argv):
+    args = parse_args(argv)
+    debug('pat-log {}', args)
+    print(dir(args))
+    try:
+        pat = Pat(args.path)
+    except Exception as err:
+        error('Error opening pat {}', err)
+        return 1
+
+    pat
+
+    return os.EX_OK
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
