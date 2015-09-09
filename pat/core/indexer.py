@@ -4,6 +4,9 @@
 
 import os
 from platform import system
+from .database import LevelDB
+from .sublevel import SubLevel
+from .messages import Commit
 
 
 class Indexer:
@@ -12,9 +15,12 @@ class Indexer:
     """
 
     sockpath_default_platform = {
-        'Windows': r'\\.\pipe\dat\\',
-        'Linux': '.',
+        'Windows': '\\\\.\\pipe\\dat\\',
+        'Linux': 'dat.sock',
+        'Darwin': 'dat.sock',
     }
+
+    sockpath = sockpath_default_platform[system()]
 
     db = None
     db_path = ''
@@ -28,47 +34,41 @@ class Indexer:
     _pending = None
     _looping = None
 
-    def __init__(self, path='.', db=None, multiprocess=False, backend=None):
-
-        self.db_path = os.path.join(path, 'leveldb')
+    def __init__(self, path='.', db=None, multiprocess=False):
 
         self._pending = []
 
         if db is not None:
-            # ready(db, create_log(db), true)
-            pass
-        elif multiprocess is None and path is None or backend is not None:
-            db = levelup(dbpath, {'db': backend})
-            # ready(db, create_log(db), true)
+            self.db = db
+        else:
+            db_path = os.path.join(path, 'leveldb')
+            self.db = LevelDB(db_path)
 
-        self.multiprocess = multiprocess({
-            'sockpath': self.sockpath_default_platform[system()]
-        })
+        self.meta = SubLevel(self.db, 'meta')
+        self.data = SubLevel(self.db, 'data')
+        self.commit = SubLevel(self.db, 'commit')
+        self.operations = SubLevel(self.db, 'operations')
 
+        self.log = SubLevel(self.db, 'meta!log')
 
-    def create_log(self, db):
-        meta = sublevel(db, 'meta')
+        self.mainlayer = self.meta['layer']
+        print(self.mainlayer)
+        changes = int(self.meta['changes'], 10)
+        print('changes:', changes)
 
-        log = meta.get('log')
+        try:
+            self.checkout = self.meta['checkout']
+        except KeyError:
+            self.checkout = None
 
-        if log and log.split(':')[0:-1].join(':'):
-            return on_log()
-
-        log = path + ":" + cuid()
-
-        meta.put('log', log)
-
-
-        return hyperlog(sublevel(db, 'log'), {'getId': getId})
-
-
-    def create_db(self):
-        return levelup(self.dbpath, {db: self.backend})
-
+        print("--")
+        for k, v in self.log.items():
+            print(k.decode(), v.split(b":"))
+        print("--")
 
     def add(self, links, value):
 
-        node = self.log.add(links, messages.Commit.encode(value))
+        node = self.log.add(links, Commit.encode(value))
         (node, layer) = self._flush_node(node)
         if self.checkout and (self.checkout in node.links):
             self.meta.batch([{'type': 'put',
@@ -79,8 +79,9 @@ class Indexer:
             self.main_layer = layer
         return node, layer
 
-    def get(self, hash_):
-        return self.log.get(hash_)
+    def get(self, hsh):
+        node = self.log.get(hsh)
+        return node, Commit.FromString(node.value)
 
     def flush(self):
         if self.changes < self.log.changes:
@@ -92,7 +93,6 @@ class Indexer:
         else:
             layer = self.layers.get(node.key)
             return node, layer
-
 
     def change_checkout(self, head):
 
@@ -110,7 +110,7 @@ class Indexer:
         elif len(hash_) >= 64:
             return self.get(hash_)
 
-        db = sublevel(subleve(self.db, 'log'), 'nodes')
+        db = sublevel(sublevel(self.db, 'log'), 'nodes')
 
         keys = db.create_key_stream({
             'gt': hash_,
@@ -129,5 +129,9 @@ class Indexer:
         if layer:
             self.mainlayer = layer
 
-        #wtf is loop?
+        # wtf is loop?
         self.loop(False, self.loop(True))
+
+    @property
+    def db_path(self):
+        return self.db.path
