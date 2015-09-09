@@ -44,3 +44,5 @@ class LevelDB:
             return self.db.Get(key)
         except KeyError:
             return default
+
+    # def nodes(self):

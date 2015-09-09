@@ -11,6 +11,10 @@ import asyncio
 from datetime import datetime
 from .core.indexer import Indexer
 from .core.database import LevelDB
+from .core.messages import (
+    COMMIT_TYPE,
+    Status,
+)
 
 
 class Pat:
@@ -83,12 +87,12 @@ class Pat:
         """
         Opens the pat container located at 'path'
         """
-        print("Path", path)
         dat_path = os.path.join(path, self.FOLDER_NAME)
-        print("dat_path", dat_path)
 
         # create the database
-        self.db = LevelDB(dat_path, create_if_missing=create_if_missing, **opts)
+        self.db = LevelDB(dat_path,
+                          create_if_missing=create_if_missing,
+                          **opts)
 
         if not os.path.exists(dat_path):
             if not create_if_missing:
@@ -97,24 +101,26 @@ class Pat:
             # TODO: Make datpath
 
         self._index = Indexer(db=self.db)
-        print("DONE")
 
     def _get_layers(self, index, head):
         pass
 
     def changes(self):
-        for key, val in self._index.meta.matching('status'):
-            commit_key = key.split(b'!')[-1].decode()
-            commit = self._index.commit[commit_key]
-            print(commit)
+        for data in self._index.log.nodes():
+            node, commit = self._index.get(data.key)
+            buf = self._index.meta['status!' + data.key]
+            st = Status.FromString(buf)
+
             yield {
-                'id': commit_key,
-                'modified': datetime.fromtimestamp(val.modified // 1000),
-                'puts': val.puts,
-                'deletes': val.deletes,
-                'rows': val.rows,
-                'files': val.files,
-                'type': val.type,
+                'root': commit.type is COMMIT_TYPE.INIT,
+                'change': data.change,
+                'date': datetime.fromtimestamp(st.modified // 1000),
+                'version': data.key,
+                'message': commit.message,
+                'links': data.links,
+                'puts': commit.puts,
+                'deletes': commit.deletes,
+                'files': commit.files,
             }
 
     def open_file(self, key):

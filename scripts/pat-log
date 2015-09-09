@@ -26,35 +26,41 @@ def parse_args(argv):
                         default=os.getcwd())
     return parser.parse_args(argv)
 
-def format(obj, enc):
+
+def form(obj):
 
     data = {
-        'version': obj.version,
-        'puts': (obj.puts if 'puts' in obj else 0),
-        'deletes': (obj.deletes if 'deletes' in obj else 0),
-        'date': (obj.deletes if 'deletes' in obj else 0),
+        'version': obj['version'],
+        'date': obj['date'],
+        'puts': obj.get('puts', 0),
+        'deletes': obj.get('deletes', 0),
     }
 
     message = ("Version: {version} [+{puts}, -{deletes}]\n"
                "Date: {date}").format(**data)
 
-    if obj.message:
-        message = '%s\n\n   %s' % (message, obj.message)
-    return message + '\n\n'
+    if obj['message']:
+        message = '%s\n\n   %s' % (message, obj['message'])
+    return message
 
 
 def main(argv):
     args = parse_args(argv)
-    debug('pat-log {}', args)
-    print(dir(args))
+    debug('pat-log %s' % args)
+
     try:
         pat = Pat(args.path)
     except Exception as err:
-        error('Error opening pat {}', err)
+        print('Error opening pat:', err, file=sys.stderr)
+        # error('Error opening pat {}', err)
         return 1
 
-    pat
+    messages = [form(change)
+                for change in pat.changes()
+                if not change['root']
+                ]
 
+    print('\n\n'.join(messages))
     return os.EX_OK
 
 if __name__ == "__main__":

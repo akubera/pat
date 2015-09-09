@@ -2,8 +2,6 @@
 # pat/core/sublevel.py
 #
 
-from . import messages
-
 END = 0xff
 
 
@@ -43,5 +41,4 @@ class SubLevel:
         prefixed_key = self.delim.join((self.prefix, key.encode()))
         for k, v in self.db.items():
             if k.startswith(prefixed_key):
-                value = messages.Status.FromString(v)
-                yield (k, value)
+                yield (k, v)

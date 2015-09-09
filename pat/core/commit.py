@@ -32,11 +32,11 @@ class Commit:
         message = {
             'type': messages.TYPE.PUT,
             'content': messages.CONTENT.FILE
-                       if opts['content'] == 'file'                     # noqa
+                       if opts['content'] == 'file'                      # noqa
                        else messages.CONTENT.ROW,
             'dataset': self.dataset,
             'key': key,
-            'vlaue': self.encode(val),
+            'value': self.encode(val),
         }
 
         dat = self._dat.open()

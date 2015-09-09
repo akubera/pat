@@ -6,7 +6,10 @@ import os
 from platform import system
 from .database import LevelDB
 from .sublevel import SubLevel
-from .messages import Commit
+from .log import Log
+from .messages import (
+    Commit,
+)
 
 
 class Indexer:
@@ -49,22 +52,18 @@ class Indexer:
         self.commit = SubLevel(self.db, 'commit')
         self.operations = SubLevel(self.db, 'operations')
 
-        self.log = SubLevel(self.db, 'meta!log')
+        self.log = Log(self.db)
 
         self.mainlayer = self.meta['layer']
-        print(self.mainlayer)
+        # print(self.mainlayer)
         changes = int(self.meta['changes'], 10)
-        print('changes:', changes)
+        # print('changes:', changes)
 
         try:
             self.checkout = self.meta['checkout']
         except KeyError:
             self.checkout = None
 
-        print("--")
-        for k, v in self.log.items():
-            print(k.decode(), v.split(b":"))
-        print("--")
 
     def add(self, links, value):
 
