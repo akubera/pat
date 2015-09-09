@@ -16,6 +16,7 @@ PACKAGES = [
 REQUIRES = [
     'python3-protobuf',
     'leveldb',
+    'cuid.py',
 ]
 
 TESTS_REQUIRE = [
